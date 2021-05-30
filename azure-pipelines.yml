@@ -67,11 +67,17 @@ stages:
         arguments: '--no-build --configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/$(buildConfiguration)'
         zipAfterPublish: true
 
-    - publish: '$(Build.ArtifactStagingDirectory)'
-      artifact: drop
+#    - publish: '$(Build.ArtifactStagingDirectory)'
+#      artifact: drop
+
+    - task: PublishBuildArtifacts@1
+      displayName: 'Publish Artifacts'
+      inputs: 
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+      condition: succeededOrFailed()
 
 - stage: 'DeployDEV'
-  displayName: 'Deploy the web application'
+  displayName: 'Deploy the web application to Dev'
   dependsOn: Build
   jobs:
   - deployment: Deploy
@@ -84,8 +90,8 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: drop
+#          - download: current
+#            artifact: drop
           - task: AzureWebApp@1
             displayName: 'Azure App Service Deploy: website'
             inputs:
@@ -94,8 +100,8 @@ stages:
               package: '$(Pipeline.Workspace)/drop/$(buildConfiguration)/*.zip'
 
 - stage: 'DeployProd'
-  displayName: 'Deploy the web application'
-  dependsOn: Build
+  displayName: 'Deploy the web application to Prod'
+  dependsOn: DeployDEV
   jobs:
   - deployment: Deploy
     pool:
@@ -107,8 +113,8 @@ stages:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: drop
+#          - download: current
+#            artifact: drop
           - task: AzureWebApp@1
             displayName: 'Azure App Service Deploy: website'
             inputs:
